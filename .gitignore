@@ -1,0 +1,12 @@
+# air files
+tmp/
+
+# env file
+.env
+
+# go workspace files
+go.work
+go.work.sum
+
+# Test binary, built with `go test -c`
+*.test
