@@ -1,2 +1,2 @@
 ### Snap
-- Snap is a database backup cli tool that allows you to backup and restore your database fast.
+- Snap is a cli tool that allows you to backup and restore your database fast.
