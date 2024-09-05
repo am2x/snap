@@ -3,3 +3,4 @@
 
 * Cobra for the cli
 * Testify for testing
+* Air for hot reload
