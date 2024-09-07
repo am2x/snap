@@ -1,5 +1,7 @@
 package main
 
+import "context"
+
 type DbConfig struct {
 	Name      string
 	Host      string
@@ -9,36 +11,40 @@ type DbConfig struct {
 	Container bool
 }
 
-func PostgresConnect() {
-
+type Application struct {
+	context context.Context
 }
 
-func MysqlConnect() {
-
+func (a *Application) PostgresConnect(db *DbConfig) error {
+	return nil
 }
 
-func SQLiteConnect() {
-
+func (a *Application) MysqlConnect(db *DbConfig) error {
+	return nil
 }
 
-func PostgresRestore() {
-
+func (a *Application) SQLiteConnect(db *DbConfig) error {
+	return nil
 }
 
-func MysqlRestore() {
-
+func (a *Application) PostgresRestore(db *DbConfig) error {
+	return nil
 }
 
-func SQLiteRestore() {
-
+func (a *Application) MysqlRestore(db *DbConfig) error {
+	return nil
 }
 
-func PostgresBackup() {
-
+func (a *Application) SQLiteRestore(db *DbConfig) error {
+	return nil
 }
-func MysqlBackup() {
 
+func (a *Application) PostgresBackup(db *DbConfig) error {
+	return nil
 }
-func SQLiteBackup() {
-
+func (a *Application) MysqlBackup(db *DbConfig) error {
+	return nil
+}
+func (a *Application) SQLiteBackup(db *DbConfig) error {
+	return nil
 }
