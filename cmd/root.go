@@ -53,6 +53,6 @@ func init() {
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	rootCmd.AddCommand(versionCmd)
-	rootCmd.AddCommand(selectDBCmd)
+	selectDbCmd.AddCommand(selectDbCmd, connectDb1Cmd, backupDbCmd, connectDb2Cmd, restoreDbCmd)
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
