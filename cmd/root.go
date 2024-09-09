@@ -49,10 +49,15 @@ func init() {
 	// will be global for your application.
 
 	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.snap.yaml)")
+	connectDb1Cmd.Flags().StringVarP(&name, "name", "n", "", "database name")
+	connectDb1Cmd.Flags().StringVarP(&server, "server", "s", "", "database host")
+	connectDb1Cmd.Flags().IntVarP(&port, "port", "p", 0, "database port")
+	connectDb1Cmd.Flags().StringVarP(&user, "user", "u", "", "database username")
+	connectDb1Cmd.Flags().StringVarP(&password, "password", "w", "", "database password")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
-	rootCmd.AddCommand(versionCmd)
-	selectDbCmd.AddCommand(selectDbCmd, connectDb1Cmd, backupDbCmd, connectDb2Cmd, restoreDbCmd)
+	rootCmd.AddCommand(versionCmd, connectDb1Cmd)
+	selectDbCmd.AddCommand(connectDb1Cmd, backupDbCmd, restoreDbCmd)
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

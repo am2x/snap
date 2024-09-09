@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -15,7 +16,13 @@ const (
 	SQLite   Database = "sqlite"
 )
 
-// var application Application
+var (
+	name     string
+	server   string
+	port     int
+	user     string
+	password string
+)
 
 var selectDbCmd = &cobra.Command{
 	Use:   "db [database]",
@@ -29,11 +36,11 @@ var selectDbCmd = &cobra.Command{
 		database := args[0]
 		fmt.Println("Database is", database)
 		if database == string(Postgres) {
-
+			log.Println("db is postgres")
 		} else if database == string(Mysql) {
-
+			log.Println("db is mysql")
 		} else if database == string(SQLite) {
-
+			log.Println("db is sqlite")
 		} else {
 			fmt.Println("Invalid database type !!")
 		}
@@ -41,13 +48,15 @@ var selectDbCmd = &cobra.Command{
 }
 
 var connectDb1Cmd = &cobra.Command{
-	Use:     "connect [host, port, name, username, password]",
+	Use:     "connect [name][server] [port][username][password]",
 	Short:   "enter db connection info",
 	Long:    "",
-	Example: "snap -host 17.198.0.52 -port 5432 -name testdb -username admin -password 12345 ",
+	Example: "snap connect -name testdb -server 17.198.0.52 -password 5432 -user admin -password 12345 ",
 	// ValidArgs: []string{"postgresql", "mysql", "sqlite"},
-	Args: cobra.ExactArgs(5),
+	Args: cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
+		log.Println(cmd.Flags().GetString("name"))
+		log.Println(args)
 		fmt.Println("Args are ", strings.Join(args, ""))
 	},
 }
@@ -58,18 +67,6 @@ var backupDbCmd = &cobra.Command{
 	Long:    "",
 	Example: "snap backup testdb",
 	Args:    cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Args are ", strings.Join(args, ""))
-	},
-}
-
-var connectDb2Cmd = &cobra.Command{
-	Use:     "connect [host, port, name, username, password]",
-	Short:   "enter db connection info",
-	Long:    "",
-	Example: "snap -host 17.198.0.52 -port 5432 -name testdb -username admin -password 12345 ",
-	// ValidArgs: []string{"postgresql", "mysql", "sqlite"},
-	Args: cobra.ExactArgs(5),
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Args are ", strings.Join(args, ""))
 	},
