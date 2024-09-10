@@ -37,7 +37,7 @@ func (c *DbConfig) ConnURL() string {
 }
 
 func (a *Application) PostgresConnect(db *DbConfig) error {
-	conn, err := pgx.Connect(a.Postgres.ConnURL())
+	conn, err := pgx.Connect()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
 		os.Exit(1)
