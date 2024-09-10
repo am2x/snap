@@ -18,8 +18,7 @@ type DbConfig struct {
 }
 
 type Application struct {
-	context  context.Context
-	Postgres DbConfig
+	context context.Context
 }
 
 // DbConnURL returns string URL, which may be used for connect to postgres database.
