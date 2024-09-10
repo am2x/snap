@@ -51,13 +51,15 @@ var connectDb1Cmd = &cobra.Command{
 	Use:     "connect [name][server] [port][username][password]",
 	Short:   "enter db connection info",
 	Long:    "",
-	Example: "snap connect -name testdb -server 17.198.0.52 -password 5432 -user admin -password 12345 ",
+	Example: "snap connect -name testdb -server 8.8.8.8 -password 5432 -user admin -password 12345 ",
 	// ValidArgs: []string{"postgresql", "mysql", "sqlite"},
-	Args: cobra.MaximumNArgs(1),
+	// Args: cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Println(cmd.Flags().GetString("name"))
-		log.Println(args)
-		fmt.Println("Args are ", strings.Join(args, ""))
+		log.Println(cmd.Flags().GetString("server"))
+		log.Println(cmd.Flags().GetString("port"))
+		log.Println(cmd.Flags().GetString("user"))
+		log.Println(cmd.Flags().GetString("password"))
 	},
 }
 

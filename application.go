@@ -1,6 +1,12 @@
 package main
 
-import "context"
+import (
+	"context"
+	"fmt"
+	"os"
+
+	"github.com/jackc/pgx"
+)
 
 type DbConfig struct {
 	Name      string
@@ -12,10 +18,41 @@ type DbConfig struct {
 }
 
 type Application struct {
-	context context.Context
+	context  context.Context
+	Postgres DbConfig
+}
+
+// DbConnURL returns string URL, which may be used for connect to postgres database.
+func (c *DbConfig) ConnURL() string {
+	// urlExample := "postgres://username:password@localhost:5432/database_name"
+	url := fmt.Sprintf(
+		"postgres://%s:%s@%s:%d/%s",
+		c.User,
+		c.Password,
+		c.Host,
+		c.Port,
+		c.Name,
+	)
+	return url
 }
 
 func (a *Application) PostgresConnect(db *DbConfig) error {
+	conn, err := pgx.Connect(a.Postgres.ConnURL())
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
+		os.Exit(1)
+	}
+	defer conn.Close()
+
+	var name string
+	var weight int64
+	err = conn.QueryRow("select name, weight from widgets where id=$1", 42).Scan(&name, &weight)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "QueryRow failed: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Println(name, weight)
 	return nil
 }
 
