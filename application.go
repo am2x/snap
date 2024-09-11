@@ -19,6 +19,7 @@ type DbConfig struct {
 
 type Application struct {
 	context context.Context
+	db      DbConfig
 }
 
 // DbConnURL returns string URL, which may be used for connect to postgres database.
@@ -53,6 +54,22 @@ func (a *Application) PostgresConnect(db *DbConfig) error {
 
 	fmt.Println(name, weight)
 	return nil
+}
+
+func (a *Application) SSHBackup() {
+
+}
+
+func (a *Application) SSHRestore() {
+
+}
+
+func (a *Application) LocalBackup() {
+
+}
+
+func (a *Application) LocalRestore() {
+
 }
 
 func (a *Application) MysqlConnect(db *DbConfig) error {
