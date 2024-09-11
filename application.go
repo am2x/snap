@@ -3,9 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"os"
-
-	"github.com/jackc/pgx"
 )
 
 type DbConfig struct {
@@ -36,25 +33,25 @@ func (c *DbConfig) ConnURL() string {
 	return url
 }
 
-func (a *Application) PostgresConnect(db *DbConfig) error {
-	conn, err := pgx.Connect()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
-		os.Exit(1)
-	}
-	defer conn.Close()
+// func (a *Application) PostgresConnect(db *DbConfig) error {
+// 	conn, err := pgx.Connect()
+// 	if err != nil {
+// 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
+// 		os.Exit(1)
+// 	}
+// 	defer conn.Close()
 
-	var name string
-	var weight int64
-	err = conn.QueryRow("select name, weight from widgets where id=$1", 42).Scan(&name, &weight)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "QueryRow failed: %v\n", err)
-		os.Exit(1)
-	}
+// 	var name string
+// 	var weight int64
+// 	err = conn.QueryRow("select name, weight from widgets where id=$1", 42).Scan(&name, &weight)
+// 	if err != nil {
+// 		fmt.Fprintf(os.Stderr, "QueryRow failed: %v\n", err)
+// 		os.Exit(1)
+// 	}
 
-	fmt.Println(name, weight)
-	return nil
-}
+// 	fmt.Println(name, weight)
+// 	return nil
+// }
 
 func (a *Application) SSHBackup() {
 
@@ -70,34 +67,4 @@ func (a *Application) LocalBackup() {
 
 func (a *Application) LocalRestore() {
 
-}
-
-func (a *Application) MysqlConnect(db *DbConfig) error {
-	return nil
-}
-
-func (a *Application) SQLiteConnect(db *DbConfig) error {
-	return nil
-}
-
-func (a *Application) PostgresRestore(db *DbConfig) error {
-	return nil
-}
-
-func (a *Application) MysqlRestore(db *DbConfig) error {
-	return nil
-}
-
-func (a *Application) SQLiteRestore(db *DbConfig) error {
-	return nil
-}
-
-func (a *Application) PostgresBackup(db *DbConfig) error {
-	return nil
-}
-func (a *Application) MysqlBackup(db *DbConfig) error {
-	return nil
-}
-func (a *Application) SQLiteBackup(db *DbConfig) error {
-	return nil
 }
