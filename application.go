@@ -3,9 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
+	"os/exec"
 )
 
-type DbConfig struct {
+type ServerConfig struct {
+	DbType    Database
 	Name      string
 	Host      string
 	Port      int
@@ -16,49 +18,41 @@ type DbConfig struct {
 
 type Application struct {
 	context context.Context
-	db      DbConfig
+	server  ServerConfig
 }
 
-// DbConnURL returns string URL, which may be used for connect to postgres database.
-func (c *DbConfig) ConnURL() string {
-	// urlExample := "postgres://username:password@localhost:5432/database_name"
-	url := fmt.Sprintf(
-		"postgres://%s:%s@%s:%d/%s",
-		c.User,
-		c.Password,
-		c.Host,
-		c.Port,
-		c.Name,
-	)
-	return url
-}
+func (a *Application) SSHBackup() error {
+	// Create the MySQL dump command
+	cmd := exec.Command("mysqldump", "-u"+a.server.User, "-p"+a.server.Password, a.server.Name)
 
-// func (a *Application) PostgresConnect(db *DbConfig) error {
-// 	conn, err := pgx.Connect()
-// 	if err != nil {
-// 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
-// 		os.Exit(1)
-// 	}
-// 	defer conn.Close()
+	// Redirect the output to a file
+	outfile, err := exec.Command("bash", "-c", fmt.Sprintf(" > %s", a.server.Name)).Output()
+	if err != nil {
+		return fmt.Errorf("failed to create backup file: %w", err)
+	}
 
-// 	var name string
-// 	var weight int64
-// 	err = conn.QueryRow("select name, weight from widgets where id=$1", 42).Scan(&name, &weight)
-// 	if err != nil {
-// 		fmt.Fprintf(os.Stderr, "QueryRow failed: %v\n", err)
-// 		os.Exit(1)
-// 	}
-
-// 	fmt.Println(name, weight)
-// 	return nil
-// }
-
-func (a *Application) SSHBackup() {
+	// Run the command
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to run mysqldump: %w", err)
+	}
+	fmt.Println("Database backup created:", a.server.Name)
+	return nil
 
 }
 
-func (a *Application) SSHRestore() {
+func (a *Application) SSHRestore() error {
+	// Create the MySQL restore command
+	cmd := exec.Command("mysql", "-u"+a.server.User, "-p"+a.server.Password, a.server.Name)
 
+	// Redirect input from the file
+	cmd.Stdin = exec.Command("bash", "-c", fmt.Sprintf(" < %s", a.server.Name)).Stdin
+
+	// Run the command
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to run mysql restore: %w", err)
+	}
+	fmt.Println("Database restored from:", a.server.Name)
+	return nil
 }
 
 func (a *Application) LocalBackup() {
