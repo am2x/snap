@@ -7,7 +7,7 @@ import (
 )
 
 type ServerConfig struct {
-	DbType    Database
+	// DbType    Database
 	Name      string
 	Host      string
 	Port      int
@@ -22,11 +22,12 @@ type Application struct {
 }
 
 func (a *Application) SSHBackup() error {
+	fileName := fmt.Sprintf(a.server.Name, ".sql")
 	// Create the MySQL dump command
 	cmd := exec.Command("mysqldump", "-u"+a.server.User, "-p"+a.server.Password, a.server.Name)
 
 	// Redirect the output to a file
-	outfile, err := exec.Command("bash", "-c", fmt.Sprintf(" > %s", a.server.Name)).Output()
+	outfile, err := exec.Command("bash", "-c", fmt.Sprintf(" > %s", fileName)).Output()
 	if err != nil {
 		return fmt.Errorf("failed to create backup file: %w", err)
 	}
@@ -35,23 +36,24 @@ func (a *Application) SSHBackup() error {
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed to run mysqldump: %w", err)
 	}
-	fmt.Println("Database backup created:", a.server.Name)
+	fmt.Println("Database", fileName, "backup created:", outfile)
 	return nil
 
 }
 
 func (a *Application) SSHRestore() error {
+	fileName := fmt.Sprintf(a.server.Name, ".sql")
 	// Create the MySQL restore command
 	cmd := exec.Command("mysql", "-u"+a.server.User, "-p"+a.server.Password, a.server.Name)
 
 	// Redirect input from the file
-	cmd.Stdin = exec.Command("bash", "-c", fmt.Sprintf(" < %s", a.server.Name)).Stdin
+	cmd.Stdin = exec.Command("bash", "-c", fmt.Sprintf(" < %s", fileName)).Stdin
 
 	// Run the command
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed to run mysql restore: %w", err)
 	}
-	fmt.Println("Database restored from:", a.server.Name)
+	fmt.Println("Database restored from:", fileName)
 	return nil
 }
 
