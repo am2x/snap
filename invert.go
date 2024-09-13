@@ -8,7 +8,7 @@ type TreeNode struct {
 }
 
 // invert tree inverts a binary tree
-func (root *TreeNode) revereseTree() {
+func (root *TreeNode) ReverseTree() {
 	if root == nil {
 		return
 	}
@@ -17,6 +17,6 @@ func (root *TreeNode) revereseTree() {
 	root.Left, root.Right = root.Right, root.Left
 
 	//recursively invert the left and right subtrees
-	root.Left.revereseTree()
-	root.Right.revereseTree()
+	root.Left.ReverseTree()
+	root.Right.ReverseTree()
 }
