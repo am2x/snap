@@ -25,7 +25,7 @@ var (
 )
 
 var selectDbCmd = &cobra.Command{
-	Use:   "db [database]",
+	Use:   "db",
 	Short: "select database",
 	Long: `Choose between the currently supported databases snap supports which are (postgresql, mysql, sqlite).
 	- You can enter db-support to check the supported databases`,
@@ -48,7 +48,7 @@ var selectDbCmd = &cobra.Command{
 }
 
 var connectDb1Cmd = &cobra.Command{
-	Use:     "connect [name][server] [port][username][password]",
+	Use:     "connect",
 	Short:   "enter db connection info",
 	Long:    "",
 	Example: "snap connect -name testdb -server 8.8.8.8 -password 5432 -user admin -password 12345 ",
