@@ -22,6 +22,14 @@ type Application struct {
 }
 
 func (a *Application) SSHBackup() error {
+	return nil
+}
+
+func (a *Application) SSHRestore() error {
+	return nil
+}
+
+func (a *Application) LocalBackup() error {
 	fileName := fmt.Sprintf(a.server.Name, ".sql")
 	// Create the MySQL dump command
 	cmd := exec.Command("mysqldump", "-u"+a.server.User, "-p"+a.server.Password, a.server.Name)
@@ -38,10 +46,9 @@ func (a *Application) SSHBackup() error {
 	}
 	fmt.Println("Database", fileName, "backup created:", outfile)
 	return nil
-
 }
 
-func (a *Application) SSHRestore() error {
+func (a *Application) LocalRestore() error {
 	fileName := fmt.Sprintf(a.server.Name, ".sql")
 	// Create the MySQL restore command
 	cmd := exec.Command("mysql", "-u"+a.server.User, "-p"+a.server.Password, a.server.Name)
@@ -55,12 +62,4 @@ func (a *Application) SSHRestore() error {
 	}
 	fmt.Println("Database restored from:", fileName)
 	return nil
-}
-
-func (a *Application) LocalBackup() {
-
-}
-
-func (a *Application) LocalRestore() {
-
 }
