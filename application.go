@@ -21,6 +21,11 @@ type Application struct {
 	server  ServerConfig
 }
 
+const (
+	MysqlPrefix    string = "mysql"
+	PostgresPrefix string = "psql"
+)
+
 func (a *Application) SSHBackup() error {
 	return nil
 }
@@ -29,10 +34,10 @@ func (a *Application) SSHRestore() error {
 	return nil
 }
 
-func (a *Application) LocalBackup() error {
+func LocalBackup(a *Application) error {
 	fileName := fmt.Sprintf(a.server.Name, ".sql")
 	// Create the MySQL dump command
-	cmd := exec.Command("mysqldump", "-u"+a.server.User, "-p"+a.server.Password, a.server.Name)
+	cmd := exec.Command("psql", "-u"+a.server.User, "-p"+a.server.Password, a.server.Name)
 
 	// Redirect the output to a file
 	outfile, err := exec.Command("bash", "-c", fmt.Sprintf(" > %s", fileName)).Output()

@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"log"
+	"os/exec"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -55,11 +56,28 @@ var connectDbCmd = &cobra.Command{
 	// ValidArgs: []string{"postgresql", "mysql", "sqlite"},
 	// Args: cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		log.Println(cmd.Flags().GetString("name"))
-		log.Println(cmd.Flags().GetString("server"))
-		log.Println(cmd.Flags().GetString("port"))
-		log.Println(cmd.Flags().GetString("user"))
-		log.Println(cmd.Flags().GetString("password"))
+		dbName, _ := cmd.Flags().GetString("name")
+		dbServer, _ := cmd.Flags().GetString("server")
+		dbPort, _ := cmd.Flags().GetInt("port")
+		dbUser, _ := cmd.Flags().GetString("user")
+		dbPassword, _ := cmd.Flags().GetString("password")
+
+		osCommand := exec.Command("export PGPASSWORD=" + dbPassword + "; psql -h " + dbServer + " -p " + string(dbPort) + " -U " + dbUser + " -d " + dbName)
+
+		if err := osCommand.Run(); err != nil {
+			fmt.Println(err)
+			return
+		}
+		fmt.Println("Database connected and live")
+
+		//SSL terminal access
+		/*
+					psql "sslmode=require host=<db-address> dbname=<db-name> user=<username>"
+
+			        //example
+			        psql "sslmode=require host=my-psql-db.cloud.neon.tech dbname=tutorials_db user=admin"
+		*/
+
 	},
 }
 
@@ -71,6 +89,30 @@ var backupDbCmd = &cobra.Command{
 	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Args are ", strings.Join(args, ""))
+
+		dbName, _ := cmd.Flags().GetString("name")
+		// dbServer, _ := cmd.Flags().GetString("server")
+		// dbPort, _ := cmd.Flags().GetInt("port")
+		dbUser, _ := cmd.Flags().GetString("user")
+		dbPassword, _ := cmd.Flags().GetString("password")
+
+		fileName := fmt.Sprintf(dbName, ".sql")
+		// Create the MySQL dump command
+		osCommand := exec.Command("psql", "-u"+dbUser, "-p"+dbPassword, dbName)
+
+		// Redirect the output to a file
+		outfile, err := exec.Command("bash", "-c", fmt.Sprintf(" > %s", fileName)).Output()
+		if err != nil {
+			fmt.Errorf("failed to create backup file: %w", err)
+			return
+		}
+
+		// Run the command
+		if err := osCommand.Run(); err != nil {
+			fmt.Errorf("failed to run mysqldump: %w", err)
+			return
+		}
+		fmt.Println("Database", fileName, "backup created:", outfile)
 	},
 }
 
