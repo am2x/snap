@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"log"
+	"os"
 	"os/exec"
 	"strings"
 
@@ -62,13 +63,15 @@ var connectDbCmd = &cobra.Command{
 		dbUser, _ := cmd.Flags().GetString("user")
 		dbPassword, _ := cmd.Flags().GetString("password")
 
-		osCommand := exec.Command("export PGPASSWORD=" + dbPassword + "; psql -h " + dbServer + " -p " + string(dbPort) + " -U " + dbUser + " -d " + dbName)
+		osCommand := exec.Command("psql", "-h ", dbServer, " -p ", string(dbPort), " -U ", dbUser, " -d ", dbName)
 
-		if err := osCommand.Run(); err != nil {
-			fmt.Println(err)
-			return
+		osCommand.Env = append(os.Environ(), fmt.Sprintf("PGPASSWORD=%s", dbPassword))
+		output, err := osCommand.CombinedOutput()
+		if err != nil {
+			log.Fatalf("Command execution failed: %s", err)
 		}
-		fmt.Println("Database connected and live")
+
+		log.Printf("Command output: %s", output)
 
 		//SSL terminal access
 		/*
