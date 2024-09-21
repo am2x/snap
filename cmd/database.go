@@ -127,5 +127,29 @@ var restoreDbCmd = &cobra.Command{
 	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Args are ", strings.Join(args, ""))
+
+		dbName, _ := cmd.Flags().GetString("name")
+		// dbServer, _ := cmd.Flags().GetString("server")
+		// dbPort, _ := cmd.Flags().GetInt("port")
+		dbUser, _ := cmd.Flags().GetString("user")
+		dbPassword, _ := cmd.Flags().GetString("password")
+
+		fileName := fmt.Sprintf(dbName, ".sql")
+		// Create the MySQL dump command
+		osCommand := exec.Command("psql", "-u"+dbUser, "-p"+dbPassword, dbName)
+
+		// Redirect the output to a file
+		outfile, err := exec.Command("bash", "-c", fmt.Sprintf(" > %s", fileName)).Output()
+		if err != nil {
+			fmt.Errorf("failed to create backup file: %w", err)
+			return
+		}
+
+		// Run the command
+		if err := osCommand.Run(); err != nil {
+			fmt.Errorf("failed to run mysqldump: %w", err)
+			return
+		}
+		fmt.Println("Database", fileName, "backup created:", outfile)
 	},
 }
