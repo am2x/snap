@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -106,13 +107,13 @@ var backupDbCmd = &cobra.Command{
 		// Redirect the output to a file
 		outfile, err := exec.Command("bash", "-c", fmt.Sprintf(" > %s", fileName)).Output()
 		if err != nil {
-			fmt.Errorf("failed to create backup file: %w", err)
+			logrus.Error("failed to create backup file: %w", err)
 			return
 		}
 
 		// Run the command
 		if err := osCommand.Run(); err != nil {
-			fmt.Errorf("failed to run mysqldump: %w", err)
+			logrus.Error("failed to run psql dump: %w", err)
 			return
 		}
 		fmt.Println("Database", fileName, "backup created:", outfile)
@@ -141,13 +142,13 @@ var restoreDbCmd = &cobra.Command{
 		// Redirect the output to a file
 		outfile, err := exec.Command("bash", "-c", fmt.Sprintf(" > %s", fileName)).Output()
 		if err != nil {
-			fmt.Errorf("failed to create backup file: %w", err)
+			logrus.Error("failed to restore backup file: %w", err)
 			return
 		}
 
 		// Run the command
 		if err := osCommand.Run(); err != nil {
-			fmt.Errorf("failed to run mysqldump: %w", err)
+			logrus.Error("failed to run psql backup: %w", err)
 			return
 		}
 		fmt.Println("Database", fileName, "backup created:", outfile)
