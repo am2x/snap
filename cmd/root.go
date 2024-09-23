@@ -51,7 +51,7 @@ func init() {
 	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.snap.yaml)")
 	connectDbCmd.Flags().StringVarP(&name, "name", "n", "", "database name")
 	connectDbCmd.Flags().StringVarP(&server, "server", "s", "", "database host")
-	connectDbCmd.Flags().IntVarP(&port, "port", "p", 0, "database port")
+	connectDbCmd.Flags().StringVarP(&port, "port", "p", "", "database port")
 	connectDbCmd.Flags().StringVarP(&user, "user", "u", "", "database username")
 	connectDbCmd.Flags().StringVarP(&password, "password", "w", "", "database password")
 

@@ -22,7 +22,7 @@ const (
 var (
 	name     string
 	server   string
-	port     int
+	port     string
 	user     string
 	password string
 )
@@ -60,19 +60,22 @@ var connectDbCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		dbName, _ := cmd.Flags().GetString("name")
 		dbServer, _ := cmd.Flags().GetString("server")
-		dbPort, _ := cmd.Flags().GetInt("port")
+		dbPort, _ := cmd.Flags().GetString("port")
 		dbUser, _ := cmd.Flags().GetString("user")
 		dbPassword, _ := cmd.Flags().GetString("password")
 
-		osCommand := exec.Command("psql", "-h ", dbServer, " -p ", string(dbPort), " -U ", dbUser, " -d ", dbName)
-
+		// Define the command without the redirection
+		osCommand := exec.Command("psql", "-U", dbUser, "-d", dbName, "-h", dbServer, "-p", dbPort, "-c", "\\q")
 		osCommand.Env = append(os.Environ(), fmt.Sprintf("PGPASSWORD=%s", dbPassword))
-		output, err := osCommand.CombinedOutput()
+
+		// logrus.Info(osCommand)
+		// Execute the command
+		err := osCommand.Run()
 		if err != nil {
 			log.Fatalf("Command execution failed: %s", err)
 		}
 
-		log.Printf("Command output: %s", output)
+		fmt.Println("Database ping successful!!")
 
 		//SSL terminal access
 		/*
@@ -92,7 +95,6 @@ var backupDbCmd = &cobra.Command{
 	Example: "snap backup testdb",
 	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Args are ", strings.Join(args, ""))
 
 		dbName, _ := cmd.Flags().GetString("name")
 		// dbServer, _ := cmd.Flags().GetString("server")
@@ -100,23 +102,28 @@ var backupDbCmd = &cobra.Command{
 		dbUser, _ := cmd.Flags().GetString("user")
 		dbPassword, _ := cmd.Flags().GetString("password")
 
-		fileName := fmt.Sprintf(dbName, ".sql")
-		// Create the MySQL dump command
-		osCommand := exec.Command("psql", "-u"+dbUser, "-p"+dbPassword, dbName)
+		// Define the command without the redirection
+		osCommand := exec.Command("pg_dump", "-U", dbUser, "-d", dbName)
+		osCommand.Env = append(os.Environ(), fmt.Sprintf("PGPASSWORD=%s", dbPassword))
 
-		// Redirect the output to a file
-		outfile, err := exec.Command("bash", "-c", fmt.Sprintf(" > %s", fileName)).Output()
+		// Create or open the file for writing the output
+		outputFile, err := os.Create("backups/testdb.sql")
 		if err != nil {
-			logrus.Error("failed to create backup file: %w", err)
-			return
+			log.Fatalf("Failed to create backup file: %s", err)
+		}
+		defer outputFile.Close()
+
+		// Set the command's stdout to the file
+		osCommand.Stdout = outputFile
+
+		logrus.Info(osCommand)
+		// Execute the command
+		err = osCommand.Run()
+		if err != nil {
+			log.Fatalf("Command execution failed: %s", err)
 		}
 
-		// Run the command
-		if err := osCommand.Run(); err != nil {
-			logrus.Error("failed to run psql dump: %w", err)
-			return
-		}
-		fmt.Println("Database", fileName, "backup created:", outfile)
+		fmt.Println("Backup successful")
 	},
 }
 
