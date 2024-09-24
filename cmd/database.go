@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"strings"
 
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -68,7 +67,6 @@ var connectDbCmd = &cobra.Command{
 		osCommand := exec.Command("psql", "-U", dbUser, "-d", dbName, "-h", dbServer, "-p", dbPort, "-c", "\\q")
 		osCommand.Env = append(os.Environ(), fmt.Sprintf("PGPASSWORD=%s", dbPassword))
 
-		// logrus.Info(osCommand)
 		// Execute the command
 		err := osCommand.Run()
 		if err != nil {
@@ -134,17 +132,17 @@ var restoreDbCmd = &cobra.Command{
 	Example: "snap restore testdb",
 	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Args are ", strings.Join(args, ""))
 
 		dbName, _ := cmd.Flags().GetString("name")
-		// dbServer, _ := cmd.Flags().GetString("server")
+		dbServer, _ := cmd.Flags().GetString("server")
 		// dbPort, _ := cmd.Flags().GetInt("port")
 		dbUser, _ := cmd.Flags().GetString("user")
 		dbPassword, _ := cmd.Flags().GetString("password")
 
 		fileName := fmt.Sprintf(dbName, ".sql")
 		// Create the MySQL dump command
-		osCommand := exec.Command("psql", "-u"+dbUser, "-p"+dbPassword, dbName)
+		osCommand := exec.Command("pg_restore", "-h", dbServer, "-U", dbUser, "-d", dbName, "-1", fileName)
+		osCommand.Env = append(os.Environ(), fmt.Sprintf("PGPASSWORD=%s", dbPassword))
 
 		// Redirect the output to a file
 		outfile, err := exec.Command("bash", "-c", fmt.Sprintf(" > %s", fileName)).Output()
@@ -155,9 +153,9 @@ var restoreDbCmd = &cobra.Command{
 
 		// Run the command
 		if err := osCommand.Run(); err != nil {
-			logrus.Error("failed to run psql backup: %w", err)
+			logrus.Error("failed to run psql restore: %w", err)
 			return
 		}
-		fmt.Println("Database", fileName, "backup created:", outfile)
+		fmt.Println("Database", fileName, "backup restored:", outfile)
 	},
 }
