@@ -67,6 +67,9 @@ var connectDbCmd = &cobra.Command{
 		osCommand := exec.Command("psql", "-U", dbUser, "-d", dbName, "-h", dbServer, "-p", dbPort, "-c", "\\q")
 		osCommand.Env = append(os.Environ(), fmt.Sprintf("PGPASSWORD=%s", dbPassword))
 
+		//sample ssh command
+		// osCommand := exec.Command("ssh", "-i", "file.pem", "ubuntu@176.48.03.79")
+
 		// Execute the command
 		err := osCommand.Run()
 		if err != nil {
