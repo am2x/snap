@@ -13,13 +13,11 @@ import (
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "snap",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Snap is a database agnostic database backup cli tool",
+	Long: `
+	Snap is a CLI tool built using Go that allows users to do 
+	quick terminal backups and restores to backup their database whether 
+	local, hosted or containerized. `,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	// Run: func(cmd *cobra.Command, args []string) { },
@@ -55,9 +53,18 @@ func init() {
 	connectDbCmd.Flags().StringVarP(&user, "user", "u", "", "database username")
 	connectDbCmd.Flags().StringVarP(&password, "password", "w", "", "database password")
 
+	backupDbCmd.Flags().StringVarP(&name, "name", "n", "", "database name")
+	backupDbCmd.Flags().StringVarP(&user, "user", "u", "", "database username")
+	backupDbCmd.Flags().StringVarP(&password, "password", "w", "", "database password")
+
+	restoreDbCmd.Flags().StringVarP(&name, "name", "n", "", "database name")
+	restoreDbCmd.Flags().StringVarP(&server, "server", "s", "", "database server")
+	restoreDbCmd.Flags().StringVarP(&user, "user", "u", "", "database username")
+	restoreDbCmd.Flags().StringVarP(&password, "password", "w", "", "database password")
+
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
-	rootCmd.AddCommand(versionCmd, connectDbCmd)
+	rootCmd.AddCommand(versionCmd, connectDbCmd, backupDbCmd, restoreDbCmd)
 	selectDbCmd.AddCommand(connectDbCmd, backupDbCmd, restoreDbCmd)
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
