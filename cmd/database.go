@@ -97,7 +97,7 @@ var backupDbCmd = &cobra.Command{
 	Short:   "confirm to begin backup",
 	Long:    "",
 	Example: "snap backup -name testdb -user admin -password 12345 ",
-	// Args:    cobra.ExactArgs(1),
+	// Args:    cobra.ExactArgs(3),
 	Run: func(cmd *cobra.Command, args []string) {
 
 		dbName, _ := cmd.Flags().GetString("name")
@@ -108,8 +108,10 @@ var backupDbCmd = &cobra.Command{
 		osCommand := exec.Command("pg_dump", "-U", dbUser, "-d", dbName)
 		osCommand.Env = append(os.Environ(), fmt.Sprintf("PGPASSWORD=%s", dbPassword))
 
+		filePath := fmt.Sprintf("backups/%s.sql", dbName)
+
 		// Create or open the file for writing the output
-		outputFile, err := os.Create("backups/testdb.sql")
+		outputFile, err := os.Create(filePath)
 		if err != nil {
 			log.Fatalf("Failed to create backup file: %s", err)
 		}
@@ -118,7 +120,6 @@ var backupDbCmd = &cobra.Command{
 		// Set the command's stdout to the file
 		osCommand.Stdout = outputFile
 
-		logrus.Info(osCommand)
 		// Execute the command
 		err = osCommand.Run()
 		if err != nil {
