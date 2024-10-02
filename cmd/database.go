@@ -53,7 +53,7 @@ var connectDbCmd = &cobra.Command{
 	Use:     "connect",
 	Short:   "enter db connection info",
 	Long:    "",
-	Example: "snap connect -name testdb -server 8.8.8.8 -password 5432 -user admin -password 12345 ",
+	Example: "snap connect -name testdb -server 8.8.8.8 -port 5432 -user admin -password 12345 ",
 	// ValidArgs: []string{"postgresql", "mysql", "sqlite"},
 	// Args: cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
@@ -68,7 +68,7 @@ var connectDbCmd = &cobra.Command{
 		osCommand.Env = append(os.Environ(), fmt.Sprintf("PGPASSWORD=%s", dbPassword))
 
 		//sample ssh command
-		// osCommand := exec.Command("ssh", "-i", "file.pem", "ubuntu@176.48.03.79")
+		// osCommand := exec.Command("ssh", "-i", "Documents/file.pem", "ubuntu@176.48.03.79")
 
 		// Execute the command
 		err := osCommand.Run()
@@ -89,17 +89,18 @@ var connectDbCmd = &cobra.Command{
 	},
 }
 
+/*
+CREATE TABLE users (username VARCHAR(255), password VARCHAR(255));
+*/
 var backupDbCmd = &cobra.Command{
 	Use:     "backup",
 	Short:   "confirm to begin backup",
 	Long:    "",
-	Example: "snap backup testdb",
-	Args:    cobra.ExactArgs(1),
+	Example: "snap backup -name testdb -user admin -password 12345 ",
+	// Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 
 		dbName, _ := cmd.Flags().GetString("name")
-		// dbServer, _ := cmd.Flags().GetString("server")
-		// dbPort, _ := cmd.Flags().GetInt("port")
 		dbUser, _ := cmd.Flags().GetString("user")
 		dbPassword, _ := cmd.Flags().GetString("password")
 
@@ -132,33 +133,35 @@ var restoreDbCmd = &cobra.Command{
 	Use:     "restore",
 	Short:   "restore destination database",
 	Long:    "",
-	Example: "snap restore testdb",
-	Args:    cobra.ExactArgs(1),
+	Example: "snap restore -name testdb -server 8.8.8.8 -port 5432 -user admin -password 12345 ",
+	// Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 
 		dbName, _ := cmd.Flags().GetString("name")
-		dbServer, _ := cmd.Flags().GetString("server")
-		// dbPort, _ := cmd.Flags().GetInt("port")
-		dbUser, _ := cmd.Flags().GetString("user")
-		dbPassword, _ := cmd.Flags().GetString("password")
+		// dbServer, _ := cmd.Flags().GetString("server")
+		// dbUser, _ := cmd.Flags().GetString("user")
+		// dbPassword, _ := cmd.Flags().GetString("password")
 
-		fileName := fmt.Sprintf(dbName, ".sql")
-		// Create the MySQL dump command
-		osCommand := exec.Command("pg_restore", "-h", dbServer, "-U", dbUser, "-d", dbName, "-1", fileName)
-		osCommand.Env = append(os.Environ(), fmt.Sprintf("PGPASSWORD=%s", dbPassword))
+		fileName := fmt.Sprintf("backups/%s.sql", dbName)
+
+		// Create the PostgreSQL restore command
+		// osCommand := exec.Command("pg_restore", "-h", dbServer, "-U", dbUser, "-d", dbName, "-1", fileName)
+		osCommand := exec.Command("psql", "-d", dbName, "-f", fileName)
+		// osCommand.Env = append(os.Environ(), fmt.Sprintf("PGPASSWORD=%s", dbPassword))
 
 		// Redirect the output to a file
-		outfile, err := exec.Command("bash", "-c", fmt.Sprintf(" > %s", fileName)).Output()
-		if err != nil {
-			logrus.Error("failed to restore backup file: %w", err)
-			return
-		}
+		// outfile, err := exec.Command("bash", "-c", fmt.Sprintf(" > %s", fileName)).Output()
+		// if err != nil {
+		// 	logrus.Error("failed to restore backup file: %w", err)
+		// 	return
+		// }
 
+		logrus.Info(osCommand)
 		// Run the command
 		if err := osCommand.Run(); err != nil {
 			logrus.Error("failed to run psql restore: %w", err)
 			return
 		}
-		fmt.Println("Database", fileName, "backup restored:", outfile)
+		fmt.Println("Database", fileName, "backup restored:", dbName)
 	},
 }
