@@ -133,7 +133,7 @@ var restoreDbCmd = &cobra.Command{
 	Use:     "restore",
 	Short:   "restore destination database",
 	Long:    "",
-	Example: "snap restore -name testdb -server 8.8.8.8 -port 5432 -user admin -password 12345 ",
+	Example: "snap restore -n testdb ",
 	// Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 
@@ -147,16 +147,7 @@ var restoreDbCmd = &cobra.Command{
 		// Create the PostgreSQL restore command
 		// osCommand := exec.Command("pg_restore", "-h", dbServer, "-U", dbUser, "-d", dbName, "-1", fileName)
 		osCommand := exec.Command("psql", "-d", dbName, "-f", fileName)
-		// osCommand.Env = append(os.Environ(), fmt.Sprintf("PGPASSWORD=%s", dbPassword))
 
-		// Redirect the output to a file
-		// outfile, err := exec.Command("bash", "-c", fmt.Sprintf(" > %s", fileName)).Output()
-		// if err != nil {
-		// 	logrus.Error("failed to restore backup file: %w", err)
-		// 	return
-		// }
-
-		logrus.Info(osCommand)
 		// Run the command
 		if err := osCommand.Run(); err != nil {
 			logrus.Error("failed to run psql restore: %w", err)

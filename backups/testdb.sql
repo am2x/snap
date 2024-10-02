@@ -21,7 +21,7 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
--- Name: users; Type: TABLE; Schema: public; Owner: mac
+-- Name: users; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.users (
@@ -30,10 +30,10 @@ CREATE TABLE public.users (
 );
 
 
-ALTER TABLE public.users OWNER TO mac;
+ALTER TABLE public.users OWNER TO postgres;
 
 --
--- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: mac
+-- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.users (username, password) FROM stdin;
