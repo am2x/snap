@@ -16,7 +16,7 @@ var rootCmd = &cobra.Command{
 	Short: "Snap is a database agnostic database backup cli tool",
 	Long: `
 	Snap is a CLI tool built using Go that allows users to do 
-	quick terminal backups and restores to backup their database whether 
+	quick terminal backups and restores to their database whether 
 	local, hosted or containerized. `,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
@@ -65,6 +65,6 @@ func init() {
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	rootCmd.AddCommand(versionCmd, connectDbCmd, backupDbCmd, restoreDbCmd)
-	selectDbCmd.AddCommand(connectDbCmd, backupDbCmd, restoreDbCmd)
+	// selectDbCmd.AddCommand(connectDbCmd, backupDbCmd, restoreDbCmd)
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
