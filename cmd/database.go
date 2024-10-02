@@ -134,13 +134,10 @@ var restoreDbCmd = &cobra.Command{
 	Short:   "restore destination database",
 	Long:    "",
 	Example: "snap restore -n testdb ",
-	// Args:    cobra.ExactArgs(1),
+	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 
 		dbName, _ := cmd.Flags().GetString("name")
-		// dbServer, _ := cmd.Flags().GetString("server")
-		// dbUser, _ := cmd.Flags().GetString("user")
-		// dbPassword, _ := cmd.Flags().GetString("password")
 
 		fileName := fmt.Sprintf("backups/%s.sql", dbName)
 
