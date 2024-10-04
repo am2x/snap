@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -48,10 +49,15 @@ func init() {
 
 	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.snap.yaml)")
 	connectDbCmd.Flags().StringVarP(&name, "name", "n", "", "database name")
+	viper.BindPFlag("name", connectDbCmd.Flags().Lookup("name"))
 	connectDbCmd.Flags().StringVarP(&server, "server", "s", "", "database host")
+	viper.BindPFlag("host", connectDbCmd.Flags().Lookup("host"))
 	connectDbCmd.Flags().StringVarP(&port, "port", "p", "", "database port")
+	viper.BindPFlag("port", connectDbCmd.Flags().Lookup("port"))
 	connectDbCmd.Flags().StringVarP(&user, "user", "u", "", "database username")
+	viper.BindPFlag("user", connectDbCmd.Flags().Lookup("user"))
 	connectDbCmd.Flags().StringVarP(&password, "password", "w", "", "database password")
+	viper.BindPFlag("password", connectDbCmd.Flags().Lookup("password"))
 
 	backupDbCmd.Flags().StringVarP(&name, "name", "n", "", "database name")
 	backupDbCmd.Flags().StringVarP(&user, "user", "u", "", "database username")

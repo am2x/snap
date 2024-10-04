@@ -8,6 +8,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 type Database string
@@ -70,6 +71,7 @@ var connectDbCmd = &cobra.Command{
 		//sample ssh command
 		// osCommand := exec.Command("ssh", "-i", "Documents/file.pem", "ubuntu@176.48.03.79")
 
+		logrus.Info(osCommand)
 		// Execute the command
 		err := osCommand.Run()
 		if err != nil {
@@ -104,6 +106,9 @@ var backupDbCmd = &cobra.Command{
 		dbUser, _ := cmd.Flags().GetString("user")
 		dbPassword, _ := cmd.Flags().GetString("password")
 
+		dbNombre := viper.Get("name")
+		logrus.Info(dbNombre)
+
 		// Define the command without the redirection
 		osCommand := exec.Command("pg_dump", "-U", dbUser, "-d", dbName)
 		osCommand.Env = append(os.Environ(), fmt.Sprintf("PGPASSWORD=%s", dbPassword))
@@ -120,6 +125,7 @@ var backupDbCmd = &cobra.Command{
 		// Set the command's stdout to the file
 		osCommand.Stdout = outputFile
 
+		logrus.Info(osCommand)
 		// Execute the command
 		err = osCommand.Run()
 		if err != nil {
