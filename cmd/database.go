@@ -58,11 +58,14 @@ var connectDbCmd = &cobra.Command{
 	// ValidArgs: []string{"postgresql", "mysql", "sqlite"},
 	// Args: cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
+
 		dbName, _ := cmd.Flags().GetString("name")
 		dbServer, _ := cmd.Flags().GetString("server")
 		dbPort, _ := cmd.Flags().GetString("port")
 		dbUser, _ := cmd.Flags().GetString("user")
 		dbPassword, _ := cmd.Flags().GetString("password")
+
+		logrus.Warn(viper.Get("name"))
 
 		// Define the command without the redirection
 		osCommand := exec.Command("psql", "-U", dbUser, "-d", dbName, "-h", dbServer, "-p", dbPort, "-c", "\\q")
@@ -102,15 +105,14 @@ var backupDbCmd = &cobra.Command{
 	// Args:    cobra.ExactArgs(3),
 	Run: func(cmd *cobra.Command, args []string) {
 
-		dbName, _ := cmd.Flags().GetString("name")
-		dbUser, _ := cmd.Flags().GetString("user")
-		dbPassword, _ := cmd.Flags().GetString("password")
+		dbName := viper.Get("name")
+		dbUser := viper.Get("user")
+		dbPassword := viper.Get("password")
 
-		dbNombre := viper.Get("name")
-		logrus.Info(dbNombre)
+		logrus.Warn(viper.Get("name"))
 
 		// Define the command without the redirection
-		osCommand := exec.Command("pg_dump", "-U", dbUser, "-d", dbName)
+		osCommand := exec.Command("pg_dump", "-U", dbUser.(string), "-d", dbName.(string))
 		osCommand.Env = append(os.Environ(), fmt.Sprintf("PGPASSWORD=%s", dbPassword))
 
 		filePath := fmt.Sprintf("backups/%s.sql", dbName)
