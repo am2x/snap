@@ -59,10 +59,6 @@ func init() {
 	connectDbCmd.Flags().StringVarP(&password, "password", "w", "", "database password")
 	viper.BindPFlag("password", connectDbCmd.Flags().Lookup("password"))
 
-	backupDbCmd.Flags().StringVarP(&name, "name", "n", "", "database name")
-	backupDbCmd.Flags().StringVarP(&user, "user", "u", "", "database username")
-	backupDbCmd.Flags().StringVarP(&password, "password", "w", "", "database password")
-
 	restoreDbCmd.Flags().StringVarP(&name, "name", "n", "", "database name")
 	restoreDbCmd.Flags().StringVarP(&server, "server", "s", "", "database server")
 	restoreDbCmd.Flags().StringVarP(&user, "user", "u", "", "database username")
