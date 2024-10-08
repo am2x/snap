@@ -27,28 +27,28 @@ var (
 	password string
 )
 
-var selectDbCmd = &cobra.Command{
-	Use:   "db [database]",
-	Short: "select database",
-	Long: `Choose between the currently supported databases snap supports which are (postgresql, mysql, sqlite).
-	- You can enter db-support to check the supported databases`,
-	Example:   "snap db postgresql",
-	ValidArgs: []string{"postgresql", "mysql", "sqlite"},
-	Args:      cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
-		database := args[0]
-		fmt.Println("Database is", database)
-		if database == string(Postgres) {
-			log.Println("db is postgres")
-		} else if database == string(Mysql) {
-			log.Println("db is mysql")
-		} else if database == string(SQLite) {
-			log.Println("db is sqlite")
-		} else {
-			fmt.Println("Invalid database type !!")
-		}
-	},
-}
+// var selectDbCmd = &cobra.Command{
+// 	Use:   "db [database]",
+// 	Short: "select database",
+// 	Long: `Choose between the currently supported databases snap supports which are (postgresql, mysql, sqlite).
+// 	- You can enter db-support to check the supported databases`,
+// 	Example:   "snap db postgresql",
+// 	ValidArgs: []string{"postgresql", "mysql", "sqlite"},
+// 	Args:      cobra.ExactArgs(1),
+// 	Run: func(cmd *cobra.Command, args []string) {
+// 		database := args[0]
+// 		fmt.Println("Database is", database)
+// 		if database == string(Postgres) {
+// 			log.Println("db is postgres")
+// 		} else if database == string(Mysql) {
+// 			log.Println("db is mysql")
+// 		} else if database == string(SQLite) {
+// 			log.Println("db is sqlite")
+// 		} else {
+// 			fmt.Println("Invalid database type !!")
+// 		}
+// 	},
+// }
 
 var connectDbCmd = &cobra.Command{
 	Use:     "connect",
@@ -59,13 +59,15 @@ var connectDbCmd = &cobra.Command{
 	// Args: cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 
+		// viper.Reset()
+
 		dbName, _ := cmd.Flags().GetString("name")
 		dbServer, _ := cmd.Flags().GetString("server")
 		dbPort, _ := cmd.Flags().GetString("port")
 		dbUser, _ := cmd.Flags().GetString("user")
 		dbPassword, _ := cmd.Flags().GetString("password")
 
-		logrus.Warn(viper.Get("name"))
+		logrus.Warn(viper.GetString("name"))
 
 		// Define the command without the redirection
 		osCommand := exec.Command("psql", "-U", dbUser, "-d", dbName, "-h", dbServer, "-p", dbPort, "-c", "\\q")
@@ -74,8 +76,8 @@ var connectDbCmd = &cobra.Command{
 		//sample ssh command
 		// osCommand := exec.Command("ssh", "-i", "Documents/file.pem", "ubuntu@176.48.03.79")
 
-		logrus.Info(osCommand)
 		// Execute the command
+		logrus.Info(osCommand)
 		err := osCommand.Run()
 		if err != nil {
 			log.Fatalf("Command execution failed: %s", err)
@@ -105,14 +107,14 @@ var backupDbCmd = &cobra.Command{
 	// Args:    cobra.ExactArgs(3),
 	Run: func(cmd *cobra.Command, args []string) {
 
-		dbName := viper.Get("name")
-		dbUser := viper.Get("user")
-		dbPassword := viper.Get("password")
+		dbName := viper.GetString("name")
+		dbUser := viper.GetString("user")
+		dbPassword := viper.GetString("password")
 
 		logrus.Warn(viper.Get("name"))
 
 		// Define the command without the redirection
-		osCommand := exec.Command("pg_dump", "-U", dbUser.(string), "-d", dbName.(string))
+		osCommand := exec.Command("pg_dump", "-U", dbUser, "-d", dbName)
 		osCommand.Env = append(os.Environ(), fmt.Sprintf("PGPASSWORD=%s", dbPassword))
 
 		filePath := fmt.Sprintf("backups/%s.sql", dbName)
@@ -160,5 +162,8 @@ var restoreDbCmd = &cobra.Command{
 			return
 		}
 		fmt.Println("Database", fileName, "backup restored:", dbName)
+	},
+	PostRun: func(cmd *cobra.Command, args []string) {
+		viper.Reset()
 	},
 }
