@@ -43,21 +43,22 @@ func Execute() {
 }
 
 func init() {
+	viper.AutomaticEnv()
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
 	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.snap.yaml)")
-	connectDbCmd.Flags().StringVarP(&name, "name", "n", "", "database name")
-	viper.BindPFlag("name", connectDbCmd.Flags().Lookup("name"))
-	connectDbCmd.Flags().StringVarP(&server, "server", "s", "", "database host")
-	viper.BindPFlag("host", connectDbCmd.Flags().Lookup("host"))
-	connectDbCmd.Flags().StringVarP(&port, "port", "p", "", "database port")
-	viper.BindPFlag("port", connectDbCmd.Flags().Lookup("port"))
-	connectDbCmd.Flags().StringVarP(&user, "user", "u", "", "database username")
-	viper.BindPFlag("user", connectDbCmd.Flags().Lookup("user"))
-	connectDbCmd.Flags().StringVarP(&password, "password", "w", "", "database password")
-	viper.BindPFlag("password", connectDbCmd.Flags().Lookup("password"))
+	connectDbCmd.PersistentFlags().StringVarP(&name, "name", "n", "", "database name")
+	viper.BindPFlag("name", connectDbCmd.PersistentFlags().Lookup("name"))
+	connectDbCmd.PersistentFlags().StringVarP(&server, "server", "s", "", "database host")
+	viper.BindPFlag("server", connectDbCmd.PersistentFlags().Lookup("server"))
+	connectDbCmd.PersistentFlags().StringVarP(&port, "port", "p", "", "database port")
+	viper.BindPFlag("port", connectDbCmd.PersistentFlags().Lookup("port"))
+	connectDbCmd.PersistentFlags().StringVarP(&user, "user", "u", "", "database username")
+	viper.BindPFlag("user", connectDbCmd.PersistentFlags().Lookup("user"))
+	connectDbCmd.PersistentFlags().StringVarP(&password, "password", "w", "", "database password")
+	viper.BindPFlag("password", connectDbCmd.PersistentFlags().Lookup("password"))
 
 	restoreDbCmd.Flags().StringVarP(&name, "name", "n", "", "database name")
 	restoreDbCmd.Flags().StringVarP(&server, "server", "s", "", "database server")
