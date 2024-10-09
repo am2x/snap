@@ -27,6 +27,30 @@ var (
 	password string
 )
 
+type DbConfig struct {
+	Name     string `mapstructure:"NAME"`
+	Server   string `mapstructure:"SERVER"`
+	Port     string `mapstructure:"PORT"`
+	User     string `mapstructure:"USER"`
+	Password string `mapstructure:"PASSWORD"`
+}
+
+func LoadConfig(path string) (config DbConfig, err error) {
+	viper.AddConfigPath(path)
+	viper.SetConfigName("config")
+	viper.SetConfigType("env")
+
+	viper.AutomaticEnv()
+
+	err = viper.ReadInConfig()
+	if err != nil {
+		return
+	}
+
+	err = viper.Unmarshal(&config)
+	return
+}
+
 // var selectDbCmd = &cobra.Command{
 // 	Use:   "db [database]",
 // 	Short: "select database",
@@ -59,15 +83,13 @@ var connectDbCmd = &cobra.Command{
 	// Args: cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 
-		// viper.Reset()
-
 		dbName, _ := cmd.Flags().GetString("name")
 		dbServer, _ := cmd.Flags().GetString("server")
 		dbPort, _ := cmd.Flags().GetString("port")
 		dbUser, _ := cmd.Flags().GetString("user")
 		dbPassword, _ := cmd.Flags().GetString("password")
 
-		logrus.Warn(viper.GetString("name"))
+		viper.WriteConfigAs("config.env")
 
 		// Define the command without the redirection
 		osCommand := exec.Command("psql", "-U", dbUser, "-d", dbName, "-h", dbServer, "-p", dbPort, "-c", "\\q")
@@ -107,17 +129,15 @@ var backupDbCmd = &cobra.Command{
 	// Args:    cobra.ExactArgs(3),
 	Run: func(cmd *cobra.Command, args []string) {
 
-		dbName := viper.GetString("name")
-		dbUser := viper.GetString("user")
-		dbPassword := viper.GetString("password")
+		config, _ := LoadConfig(".")
 
-		logrus.Warn(viper.Get("name"))
+		logrus.Warn(config.Name)
 
 		// Define the command without the redirection
-		osCommand := exec.Command("pg_dump", "-U", dbUser, "-d", dbName)
-		osCommand.Env = append(os.Environ(), fmt.Sprintf("PGPASSWORD=%s", dbPassword))
+		osCommand := exec.Command("pg_dump", "-U", config.User, "-d", config.Name)
+		osCommand.Env = append(os.Environ(), fmt.Sprintf("PGPASSWORD=%s", config.Password))
 
-		filePath := fmt.Sprintf("backups/%s.sql", dbName)
+		filePath := fmt.Sprintf("backups/%s.sql", config.Name)
 
 		// Create or open the file for writing the output
 		outputFile, err := os.Create(filePath)
