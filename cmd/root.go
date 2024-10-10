@@ -61,9 +61,6 @@ func init() {
 	viper.BindPFlag("password", connectDbCmd.PersistentFlags().Lookup("password"))
 
 	restoreDbCmd.Flags().StringVarP(&name, "name", "n", "", "database name")
-	restoreDbCmd.Flags().StringVarP(&server, "server", "s", "", "database server")
-	restoreDbCmd.Flags().StringVarP(&user, "user", "u", "", "database username")
-	restoreDbCmd.Flags().StringVarP(&password, "password", "w", "", "database password")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
