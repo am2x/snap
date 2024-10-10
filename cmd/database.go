@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -131,8 +132,6 @@ var backupDbCmd = &cobra.Command{
 
 		config, _ := LoadConfig(".")
 
-		logrus.Warn(config.Name)
-
 		// Define the command without the redirection
 		osCommand := exec.Command("pg_dump", "-U", config.User, "-d", config.Name)
 		osCommand.Env = append(os.Environ(), fmt.Sprintf("PGPASSWORD=%s", config.Password))
@@ -165,7 +164,7 @@ var restoreDbCmd = &cobra.Command{
 	Short:   "restore destination database",
 	Long:    "",
 	Example: "snap restore -n testdb ",
-	Args:    cobra.ExactArgs(1),
+	// Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 
 		dbName, _ := cmd.Flags().GetString("name")
@@ -177,9 +176,26 @@ var restoreDbCmd = &cobra.Command{
 		osCommand := exec.Command("psql", "-d", dbName, "-f", fileName)
 
 		// Run the command
-		if err := osCommand.Run(); err != nil {
-			logrus.Error("failed to run psql restore: %w", err)
-			return
+		logrus.Info(osCommand)
+		output, err := osCommand.CombinedOutput()
+		if err != nil {
+
+			if strings.Contains(string(output), "does not exist") {
+
+				// config, _ := LoadConfig(".")
+
+				createCommand := exec.Command("psql", "-U", "postgres", "-c", fmt.Sprintf("CREATE DATABASE %s;", dbName))
+
+				logrus.Info(createCommand)
+				createOutput, err := createCommand.CombinedOutput()
+				if err != nil {
+					logrus.Errorf("psql create db error '%s'", createOutput)
+					return
+				}
+			} else {
+				logrus.Errorf("failed to run psql restore: %s", string(output))
+				return
+			}
 		}
 		fmt.Println("Database", fileName, "backup restored:", dbName)
 	},
