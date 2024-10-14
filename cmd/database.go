@@ -182,8 +182,6 @@ var restoreDbCmd = &cobra.Command{
 
 			if strings.Contains(string(output), "does not exist") {
 
-				// config, _ := LoadConfig(".")
-
 				createCommand := exec.Command("psql", "-U", "postgres", "-c", fmt.Sprintf("CREATE DATABASE %s;", dbName))
 
 				logrus.Info(createCommand)
