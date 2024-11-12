@@ -2,12 +2,11 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"strings"
 
-	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -100,7 +99,7 @@ var connectDbCmd = &cobra.Command{
 		// osCommand := exec.Command("ssh", "-i", "Documents/file.pem", "ubuntu@176.48.03.79")
 
 		// Execute the command
-		logrus.Info(osCommand)
+		log.Info(osCommand)
 		err := osCommand.Run()
 		if err != nil {
 			log.Fatalf("Command execution failed: %s", err)
@@ -148,7 +147,7 @@ var backupDbCmd = &cobra.Command{
 		// Set the command's stdout to the file
 		osCommand.Stdout = outputFile
 
-		logrus.Info(osCommand)
+		log.Info(osCommand)
 		// Execute the command
 		err = osCommand.Run()
 		if err != nil {
@@ -169,33 +168,53 @@ var restoreDbCmd = &cobra.Command{
 
 		dbName, _ := cmd.Flags().GetString("name")
 
-		fileName := fmt.Sprintf("backups/%s.sql", dbName)
+		filePath := fmt.Sprintf("backups/%s.sql", dbName)
 
 		// Create the PostgreSQL restore command
 		// osCommand := exec.Command("pg_restore", "-h", dbServer, "-U", dbUser, "-d", dbName, "-1", fileName)
-		osCommand := exec.Command("psql", "-d", dbName, "-f", fileName)
+		restoreCommand := exec.Command("psql", "-d", dbName, "-f", filePath)
 
 		// Run the command
-		logrus.Info(osCommand)
-		output, err := osCommand.CombinedOutput()
+		log.Info(restoreCommand)
+		output, err := restoreCommand.CombinedOutput()
 		if err != nil {
+			log.Error(string(output))
 
 			if strings.Contains(string(output), "does not exist") {
 
-				createCommand := exec.Command("psql", "-U", "postgres", "-c", fmt.Sprintf("CREATE DATABASE %s;", dbName))
-
-				logrus.Info(createCommand)
-				createOutput, err := createCommand.CombinedOutput()
+				//create os pipe for running subsequent commands
+				r, w, err := os.Pipe()
 				if err != nil {
-					logrus.Errorf("psql create db error '%s'", createOutput)
+					log.Errorf("error opening os pipe : %v", err)
+					return
+				}
+				defer r.Close()
+
+				createCommand := exec.Command("psql", "-U", "postgres", "-c", fmt.Sprintf("CREATE DATABASE %s;", dbName))
+				// log.Info(createCommand)
+				createCommand.Stdout = w
+
+				err = createCommand.Start()
+				if err != nil {
+					log.Errorf("error running create command: %v", err)
+					return
+				}
+				defer createCommand.Wait()
+				w.Close()
+
+				restoreCommand.Stdin = r
+				restoreCommand.Stdout = os.Stdout
+				err = restoreCommand.Run()
+				if err != nil {
+					log.Errorf("error restoring database : %v", err)
 					return
 				}
 			} else {
-				logrus.Errorf("failed to run psql restore: %s", string(output))
+				log.Errorf("failed to run psql restore: %s", string(output))
 				return
 			}
 		}
-		fmt.Println("Database", fileName, "backup restored:", dbName)
+		log.Info("Database ", dbName, " backup restored")
 	},
 	PostRun: func(cmd *cobra.Command, args []string) {
 		viper.Reset()
