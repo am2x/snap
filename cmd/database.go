@@ -19,14 +19,6 @@ const (
 	SQLite   Database = "sqlite"
 )
 
-var (
-	name     string
-	server   string
-	port     string
-	user     string
-	password string
-)
-
 type DbConfig struct {
 	Name     string `mapstructure:"NAME"`
 	Server   string `mapstructure:"SERVER"`
@@ -95,26 +87,41 @@ var connectDbCmd = &cobra.Command{
 		osCommand := exec.Command("psql", "-U", dbUser, "-d", dbName, "-h", dbServer, "-p", dbPort, "-c", "\\q")
 		osCommand.Env = append(os.Environ(), fmt.Sprintf("PGPASSWORD=%s", dbPassword))
 
-		//sample ssh command
-		// osCommand := exec.Command("ssh", "-i", "Documents/file.pem", "ubuntu@176.48.03.79")
-
 		// Execute the command
-		log.Info(osCommand)
 		err := osCommand.Run()
 		if err != nil {
 			log.Fatalf("Command execution failed: %s", err)
 		}
 
 		fmt.Println("Database ping successful!!")
+	},
+}
 
-		//SSL terminal access
-		/*
-					psql "sslmode=require host=<db-address> dbname=<db-name> user=<username>"
+var sshConnect = &cobra.Command{
+	Use:     "ssh-connect",
+	Short:   "secure connect to remote server",
+	Long:    "",
+	Example: "snap ssh-connect --user centos --host 176.48.03.79 --key /Users/mac/key",
+	Run: func(cmd *cobra.Command, args []string) {
+		host, _ := cmd.Flags().GetString("host")
+		user, _ := cmd.Flags().GetString("user")
+		keyFilePath, _ := cmd.Flags().GetString("key")
 
-			        //example
-			        psql "sslmode=require host=my-psql-db.cloud.neon.tech dbname=tutorials_db user=admin"
-		*/
+		server := fmt.Sprintf("%s@%s", user, host)
+		command := "docker ls"
 
+		//ssh -i /Users/mac/key ubuntu@176.48.03.79
+		sshCmd := exec.Command("ssh", "-i", keyFilePath, server, command)
+		log.Info(sshCmd)
+
+		// Set the output to the standard output and error
+		sshCmd.Stdout = os.Stdout
+		sshCmd.Stderr = os.Stderr
+
+		if err := sshCmd.Run(); err != nil {
+			log.Errorf("error executing ssh command : %v\n", err)
+			return
+		}
 	},
 }
 
