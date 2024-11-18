@@ -11,6 +11,14 @@ import (
 	"github.com/spf13/viper"
 )
 
+var (
+	name     string
+	server   string
+	port     string
+	user     string
+	password string
+)
+
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "snap",
@@ -62,9 +70,16 @@ func init() {
 
 	restoreDbCmd.Flags().StringVarP(&name, "name", "n", "", "database name")
 
+	sshConnect.PersistentFlags().StringVarP(&server, "host", "H", "", "ssh host")
+	sshConnect.MarkFlagRequired("host")
+	sshConnect.PersistentFlags().StringVarP(&user, "user", "u", "", "user")
+	sshConnect.MarkFlagRequired("user")
+	sshConnect.PersistentFlags().StringVarP(&password, "key", "k", "", "path to ssh key file")
+	sshConnect.MarkFlagRequired("key")
+
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
-	rootCmd.AddCommand(versionCmd, connectDbCmd, backupDbCmd, restoreDbCmd)
+	rootCmd.AddCommand(versionCmd, connectDbCmd, backupDbCmd, restoreDbCmd, sshConnect)
 	// selectDbCmd.AddCommand(connectDbCmd, backupDbCmd, restoreDbCmd)
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
