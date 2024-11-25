@@ -1,9 +1,5 @@
 package main
 
-import (
-	"context"
-)
-
 type ServerConfig struct {
 	// DbType    Database
 	Name      string
@@ -15,8 +11,8 @@ type ServerConfig struct {
 }
 
 type Application struct {
-	context context.Context
-	server  ServerConfig
+	// context context.Context
+	// server  ServerConfig
 }
 
 const (
