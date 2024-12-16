@@ -43,29 +43,6 @@ func LoadConfig(path string) (config DbConfig, err error) {
 	return
 }
 
-// var selectDbCmd = &cobra.Command{
-// 	Use:   "db [database]",
-// 	Short: "select database",
-// 	Long: `Choose between the currently supported databases snap supports which are (postgresql, mysql, sqlite).
-// 	- You can enter db-support to check the supported databases`,
-// 	Example:   "snap db postgresql",
-// 	ValidArgs: []string{"postgresql", "mysql", "sqlite"},
-// 	Args:      cobra.ExactArgs(1),
-// 	Run: func(cmd *cobra.Command, args []string) {
-// 		database := args[0]
-// 		fmt.Println("Database is", database)
-// 		if database == string(Postgres) {
-// 			log.Println("db is postgres")
-// 		} else if database == string(Mysql) {
-// 			log.Println("db is mysql")
-// 		} else if database == string(SQLite) {
-// 			log.Println("db is sqlite")
-// 		} else {
-// 			fmt.Println("Invalid database type !!")
-// 		}
-// 	},
-// }
-
 var connectDbCmd = &cobra.Command{
 	Use:     "connect",
 	Short:   "enter db connection info",
