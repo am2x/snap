@@ -132,7 +132,6 @@ var backupDbCmd = &cobra.Command{
 		osCommand.Stdout = outputFile
 
 		log.Info(osCommand)
-		// Execute the command
 		err = osCommand.Run()
 		if err != nil {
 			log.Fatalf("Command execution failed: %s", err)
@@ -147,7 +146,6 @@ var restoreDbCmd = &cobra.Command{
 	Short:   "restore destination database",
 	Long:    "",
 	Example: "snap restore -n testdb ",
-	// Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 
 		dbName, _ := cmd.Flags().GetString("name")
