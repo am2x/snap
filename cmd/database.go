@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/AllanM007/snap/helpers"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -172,7 +173,10 @@ var restoreDbCmd = &cobra.Command{
 				}
 				defer r.Close()
 
-				createCommand := exec.Command("psql", "-U", "postgres", "-c", fmt.Sprintf("CREATE DATABASE %s;", dbName))
+				dialect := helpers.GetDialect("")
+				safeName := dialect.QuoteIdentifier(dbName)
+
+				createCommand := exec.Command("psql", "-U", "postgres", "-c", fmt.Sprintf("CREATE DATABASE %s;", safeName))
 				// log.Info(createCommand)
 				createCommand.Stdout = w
 
