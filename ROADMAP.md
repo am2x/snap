@@ -47,15 +47,190 @@ No new features in this phase.
       variables or read flags via `cmd.Flags().GetString` only.
 - [ ] `connect` writes config *before* verifying the connection succeeds — reorder
       so a failed ping doesn't persist bad config.
-- [ ] Introduce a `internal/` layout:
-      ```
-      cmd/            — Cobra commands only (thin: parse flags, call internal)
-      internal/config — load/save/validate connection profiles
-      internal/engine — backup/restore orchestration (Phase 2+)
-      internal/db     — database drivers (Phase 3+)
-      ```
+- [ ] Introduce an `internal/` layout — expanded in **0.3a** below.
 - [ ] Support multiple named connection profiles (`snap connect --profile prod`),
       stored under `~/.config/snap/`.
+
+### 0.3a Package layout — detailed plan
+
+#### Why root-level `internal/`, and what's wrong with the current tree
+
+Current state (as of starting this task):
+
+```
+snap/
+├── main.go                 — package main, calls cmd.Execute()
+├── cmd/
+│   ├── root.go             — root command + ALL flag wiring in one init()
+│   ├── database.go         — connect, ssh-connect, backup, restore (500+ lines)
+│   └── internal/           — ⚠ misplaced: empty config/ and engine/ dirs
+├── helpers/
+│   └── dialect.go          — identifier quoting (good code, wrong home)
+└── utils/                  — ⚠ empty grab-bag dir
+```
+
+Three placement problems to fix:
+
+1. **`cmd/internal/` must move to repo-root `internal/`.** The Go compiler
+   enforces `internal/` visibility relative to its *parent* directory: code under
+   `cmd/internal/...` is importable only by packages under `cmd/`. That happens
+   to work today, but the moment `main.go` (or a future `pkg/`, or tests outside
+   `cmd/`) needs config or engine types, the import is a compile error. Root-level
+   `internal/` means "importable by this module only", which is the intent.
+   Reference: https://go.dev/doc/go1.4#internal-packages and
+   https://go.dev/doc/modules/layout ("Package or command with supporting packages").
+2. **Kill `helpers/` and `utils/`.** Package names should describe *what they
+   provide*, not *what they are* (`helpers`, `utils`, `common`, `misc` all fail
+   this). `dialect.go` is database identifier handling → it belongs in
+   `internal/db`. The empty `utils/` dir should be deleted before it attracts
+   code. References: https://go.dev/blog/package-names,
+   Dave Cheney "Practical Go" §2 (package naming):
+   https://dave.cheney.net/practical-go/presentations/practical-go.html#_identifiers.
+3. **`cmd/` as the Cobra package is fine — but decide once.** Cobra's generator
+   uses `cmd/` as a package of commands (what you have). The other convention —
+   `cmd/snap/main.go` per-binary entrypoints — matters only for multi-binary
+   repos. Keep the current shape; note the alternative and move on. Do NOT adopt
+   the full `golang-standards/project-layout` tree — it is community lore, not
+   official, and oversized for a single-binary CLI (see the maintainer discussion
+   in https://github.com/golang-standards/project-layout/issues/117).
+
+#### Target tree (end of Phase 0)
+
+```
+snap/
+├── main.go                       — entrypoint: cmd.Execute() only. Move the
+│                                   timezone hack out (or delete it — forcing
+│                                   time.Local to Africa/Nairobi will stamp
+│                                   backups with local time; prefer time.UTC
+│                                   in filenames, formatted at display time)
+├── cmd/                          — Cobra layer ONLY: declare flags, parse, call internal/*
+│   ├── root.go                   — rootCmd, Execute(), persistent --verbose flag,
+│   │                               SilenceUsage: true (see error-fix list below)
+│   ├── connect.go                — connectCmd: flags → config.Profile → engine.Ping
+│   ├── backup.go                 — backupCmd: flags → engine.Backup
+│   ├── restore.go                — restoreCmd: flags → engine.Restore
+│   ├── ssh.go                    — sshConnectCmd (until Phase 4 replaces it)
+│   └── version.go                — versionCmd
+├── internal/
+│   ├── config/
+│   │   ├── config.go             — Profile struct {Name, Server, Port, User, Password},
+│   │   │                           Load(path)/Save(path) — the ONLY file that
+│   │   │                           imports viper; everything else takes a Profile
+│   │   ├── validate.go           — Profile.Validate(): non-empty name, numeric port 1–65535
+│   │   └── config_test.go        — Save→Load round-trip via t.TempDir()
+│   ├── engine/
+│   │   ├── engine.go             — orchestration API the commands call:
+│   │   │                             Ping(ctx, Profile) error
+│   │   │                             Backup(ctx, Profile, BackupOptions) error
+│   │   │                             Restore(ctx, Profile, RestoreOptions) error
+│   │   │                           context.Context threaded from day one —
+│   │   │                           Phase 1 cancellation slots in with no refactor
+│   │   ├── backup.go             — today: wraps pg_dump via exec; Phase 2 swaps
+│   │   │                           the body for pgx, signatures unchanged
+│   │   └── restore.go            — today: wraps psql via exec
+│   └── db/
+│       ├── dialect.go            — moved verbatim from helpers/dialect.go
+│       │                           (package db; call sites: db.GetDialect)
+│       └── dialect_test.go       — table-driven: names with ", `, ], unicode,
+│                                   empty string; assert quoted output
+├── backups/                      — data, unchanged (gitignore it — dumps don't
+│                                   belong in history; backups/testdb.sql is
+│                                   already committed, remove it)
+├── Makefile                      — currently 0 bytes; fill in (0.4)
+└── .golangci.yml                 — see error-fix list: current filename is wrong
+```
+
+Layering rule to enforce from now on: `cmd → internal/engine → internal/db`,
+and `cmd → internal/config`. Nothing imports `cmd`; `internal/db` imports no
+sibling. If an import needs to point "sideways" or "up", the type is in the
+wrong package.
+
+#### Migration steps (each is one small commit)
+
+1. `git mv helpers/dialect.go internal/db/dialect.go`; change `package helpers`
+   → `package db`; fix the import in `cmd/database.go`
+   (`github.com/AllanM007/snap/internal/db`); `rmdir helpers utils`;
+   `go build ./...`.
+2. Add `internal/db/dialect_test.go` (first real test in the repo — proves the
+   test wiring before anything depends on it).
+3. `git mv cmd/internal/config internal/config` and same for `engine` (they're
+   empty, so this is just directory moves); create `internal/config/config.go`
+   by extracting `DbConfig` + `LoadConfig` out of `cmd/database.go`; rename
+   `DbConfig` → `Profile` (it will soon be one of several named profiles).
+4. Add `Profile.Validate()` + `config_test.go`.
+5. Create `internal/engine` with `Ping/Backup/Restore` and move the `exec`
+   bodies from the command closures into it. The Cobra `RunE` funcs shrink to:
+   parse flags → build `Profile`/options → call engine → return error.
+6. Split `cmd/database.go` into per-command files (`connect.go`, `backup.go`,
+   `restore.go`, `ssh.go`). Move each command's flag registration out of
+   `root.go`'s `init()` into an `init()` in its own file — that's what makes
+   the shared-variable bug (below) structurally impossible to reintroduce.
+7. Delete `application.go` remnants if any survive, plus stale commented code.
+
+Order matters: 1–2 are risk-free warm-ups; 5 is the real extraction; 6 is
+mechanical once 5 is done. Run `go build ./... && go test ./...` between every
+step — no step should leave the tree broken.
+
+#### Error fixes found in the current WIP diff (fold into this task)
+
+- [ ] **`restore`: swallowed error.** `cmd/database.go` now has
+      `restoreDBName, err := cmd.Flags().GetString("name"); if err != nil { return nil }`
+      — returns `nil` on error, silently succeeding. Must be `return err`. (This
+      is the exact bug class 0.2 exists to kill; worth a linter — `nilerr` in
+      golangci-lint catches it.)
+- [ ] **`restore`: reused `exec.Cmd`.** The create-then-retry path calls
+      `restoreCommand.Run()` on a command that already ran via
+      `restoreCommand.CombinedOutput()`. An `exec.Cmd` is single-use — the retry
+      always fails with `exec: already started`. Build a fresh
+      `exec.Command(...)` for the retry. (Pre-existing bug, but the refactor into
+      `engine/restore.go` is the moment to fix it. The whole pipe dance can also
+      go: run create, wait for it, then run restore — nothing needs the pipe.)
+- [ ] **`connect`: still `log.Fatalf` inside `RunE`.** `log.Fatalf` calls
+      `os.Exit(1)` — deferred cleanups don't run and the RunE error path is
+      bypassed. Return the error. Same in `backup` (`Failed to create backup
+      file`, `Command execution failed`).
+- [ ] **`connect`: `viper.WriteConfigAs("config.env")` error ignored**, and still
+      written before the ping (your TODO). Both resolved naturally by step 3/5:
+      `config.Save` returns an error, and the engine call order becomes
+      ping-then-save.
+- [ ] **Double error reporting.** `ssh-connect` does `log.Errorf(...)` then
+      `return err` — with RunE, Cobra prints the error again. Pick one channel:
+      return errors (wrapped with `fmt.Errorf("...: %w", err)` for context) and
+      let the top level print. Set `SilenceUsage: true` on rootCmd so runtime
+      errors don't dump the help text, and optionally `SilenceErrors: true` with
+      a single `fmt.Fprintln(os.Stderr, err)` in `Execute()`. Reference:
+      https://github.com/spf13/cobra/blob/main/site/content/user_guide.md
+- [ ] **Lint config filename.** `.golangci-lint.yaml` is not a name golangci-lint
+      auto-detects — it looks for `.golangci.{yml,yaml,toml,json}`. Rename, and
+      fill the currently-empty file. Useful starter set for this codebase:
+      `errcheck`, `govet`, `staticcheck`, `nilerr`, `errorlint`, `noctx`,
+      `unparam`, `revive`. Reference: https://golangci-lint.run/usage/configuration/
+- [ ] **Empty `Makefile`** (0 bytes) — minimum viable targets:
+      `build` (`go build -o bin/snap .`), `test` (`go test ./...`),
+      `lint` (`golangci-lint run`), `vet`, `tidy`.
+- [ ] **`main.go` timezone override** — `time.Local = loc` mutates a process
+      global and will surprise every timestamp in the app; drop it and use
+      explicit locations where display formatting needs one.
+
+#### References for this task (in reading order)
+
+1. https://go.dev/doc/modules/layout — official module layout guidance (short;
+   the single source of truth for where `internal/` goes).
+2. https://go.dev/blog/package-names — why `helpers`/`utils` are anti-patterns
+   and what to name things instead.
+3. https://dave.cheney.net/practical-go/presentations/practical-go.html —
+   §2 (naming) and §5 (API design); directly applicable to the engine API shape.
+4. Ben Johnson, "Standard Package Layout"
+   https://medium.com/@benbjohnson/standard-package-layout-7cdbc8391fc1 —
+   the "root package for domain types, subpackages for dependencies" idea behind
+   putting `Profile` in `config` and keeping viper quarantined there.
+5. https://github.com/spf13/cobra/blob/main/site/content/user_guide.md — RunE,
+   SilenceUsage/SilenceErrors, per-file command organization.
+6. https://golangci-lint.run/usage/configuration/ — config discovery + linter list.
+
+**Exit criteria for 0.3a:** `cmd/*.go` contain no `exec.Command` and no viper
+calls; `go build ./...` clean; dialect + config tests pass; `helpers/`, `utils/`,
+`cmd/internal/` gone.
 
 ### 0.4 Testing foundation
 - [ ] Add first unit tests (Testify is already in the README promise): config
