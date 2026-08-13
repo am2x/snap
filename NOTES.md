@@ -28,3 +28,5 @@
 
 -> Copy file from server to local machine
 * scp -i /Users/mac/bestbooks centos@54.145.225.243:/home/centos/bestbooks_23_02_2024.sql /Users/mac/Desktop/
+
+Reference -> https://roadmap.sh/projects/database-backup-utility 
