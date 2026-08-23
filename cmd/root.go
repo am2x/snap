@@ -4,7 +4,6 @@ Copyright © 2024 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -30,15 +29,6 @@ var rootCmd = &cobra.Command{
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	// Run: func(cmd *cobra.Command, args []string) { },
-}
-
-var versionCmd = &cobra.Command{
-	Use:   "version",
-	Short: "Print the current project version",
-	Long:  "A longer version is returned reflecting the current project release version available",
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Snap version 0.0.1 -- HEAD")
-	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
